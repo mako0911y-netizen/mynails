@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mynails | カラー診断</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Noto+Serif+JP:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #faf7f4;
+    --blush: #e8d5cb;
+    --rose: #c4927e;
+    --deep: #7a5548;
+    --dark: #2a1f1a;
+    --text: #4a3830;
+    --muted: #9a8078;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--cream);
+    color: var(--text);
+    font-family: 'Noto Serif JP', serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* Header */
+  header {
+    padding: 2.5rem 2rem 1.5rem;
+    text-align: center;
+    border-bottom: 0.5px solid var(--blush);
+  }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 1.4rem;
+    letter-spacing: 0.35em;
+    color: var(--deep);
+    text-transform: lowercase;
+  }
+
+  .logo-sub {
+    font-family: 'Noto Serif JP', serif;
+    font-weight: 200;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    margin-top: 0.3rem;
+  }
+
+  /* Main wrapper */
+  main {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 0 1.5rem 5rem;
+  }
+
+  /* Hero section */
+  .hero {
+    padding: 3.5rem 0 2.5rem;
+    text-align: center;
+    animation: fadeUp 0.9s ease both;
+  }
+
+  .hero-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    color: var(--rose);
+    margin-bottom: 1.2rem;
+    text-transform: lowercase;
+  }
+
+  .hero-title {
+    font-family: 'Noto Serif JP', serif;
+    font-weight: 200;
+    font-size: 1.6rem;
+    line-height: 2;
+    letter-spacing: 0.15em;
+    color: var(--dark);
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-desc {
+    font-size: 0.75rem;
+    line-height: 2.2;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  /* Divider */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+
+  .divider::before,
+  .divider::after {
+    content: '';
+    flex: 1;
+    height: 0.5px;
+    background: var(--blush);
+  }
+
+  .divider-icon {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--rose);
+  }
+
+  /* Question card */
+  .question-area {
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .step-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 0.4rem;
+    margin-bottom: 2rem;
+  }
+
+  .step-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--blush);
+    transition: background 0.3s, transform 0.3s;
+  }
+
+  .step-dot.active {
+    background: var(--rose);
+    transform: scale(1.3);
+  }
+
+  .step-dot.done {
+    background: var(--deep);
+  }
+
+  .question-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--rose);
+    text-align: center;
+    margin-bottom: 0.8rem;
+    text-transform: lowercase;
+  }
+
+  .question-text {
+    font-weight: 300;
+    font-size: 1rem;
+    line-height: 2;
+    letter-spacing: 0.1em;
+    text-align: center;
+    color: var(--dark);
+    margin-bottom: 2rem;
+  }
+
+  /* Options */
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .option-btn {
+    background: white;
+    border: 0.5px solid var(--blush);
+    border-radius: 2px;
+    padding: 1rem 1.5rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .option-btn::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background: linear-gradient(90deg, var(--blush) 0%, transparent 100%);
+    transition: width 0.3s ease;
+  }
+
+  .option-btn:hover::before {
+    width: 100%;
+  }
+
+  .option-btn:hover {
+    border-color: var(--rose);
+    transform: translateX(3px);
+  }
+
+  .option-btn.selected {
+    border-color: var(--rose);
+    background: linear-gradient(90deg, rgba(232,213,203,0.4) 0%, white 60%);
+  }
+
+  .option-icon {
+    font-size: 1.2rem;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+
+  .option-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .option-main {
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    display: block;
+    font-weight: 300;
+  }
+
+  .option-sub {
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    display: block;
+    margin-top: 0.2rem;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+  }
+
+  /* Navigation */
+  .nav-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+  }
+
+  .btn-back {
+    background: none;
+    border: none;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0.5rem 0;
+    transition: color 0.2s;
+  }
+
+  .btn-back:hover {
+    color: var(--rose);
+  }
+
+  .btn-next {
+    background: var(--deep);
+    color: var(--cream);
+    border: none;
+    padding: 0.9rem 2.5rem;
+    font-family: 'Noto Serif JP', serif;
+    font-weight: 200;
+    font-size: 0.75rem;
+    letter-spacing: 0.25em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 1px;
+  }
+
+  .btn-next:hover {
+    background: var(--rose);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(196,146,126,0.3);
+  }
+
+  .btn-next:disabled {
+    background: var(--blush);
+    color: var(--muted);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Result section */
+  .result-area {
+    animation: fadeUp 0.8s ease both;
+    display: none;
+  }
+
+  .result-area.show {
+    display: block;
+  }
+
+  .result-header {
+    text-align: center;
+    padding: 2rem 0;
+  }
+
+  .result-type-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--rose);
+    margin-bottom: 1rem;
+    text-transform: lowercase;
+  }
+
+  .result-type {
+    font-family: 'Noto Serif JP', serif;
+    font-weight: 200;
+    font-size: 1.8rem;
+    letter-spacing: 0.2em;
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .result-type-en {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--rose);
+    letter-spacing: 0.15em;
+  }
+
+  .result-desc {
+    font-size: 0.78rem;
+    line-height: 2.3;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: white;
+    border-left: 1.5px solid var(--rose);
+  }
+
+  /* Color swatches */
+  .color-section {
+    margin: 2rem 0;
+  }
+
+  .color-section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    text-transform: lowercase;
+  }
+
+  .swatches {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .swatch-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 0.5px solid rgba(0,0,0,0.08);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  .swatch-name {
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  /* Nail card */
+  .nail-card {
+    background: white;
+    border: 0.5px solid var(--blush);
+    padding: 1.5rem;
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    transition: border-color 0.2s;
+  }
+
+  .nail-card:hover {
+    border-color: var(--rose);
+  }
+
+  .nail-color-preview {
+    width: 50px;
+    height: 70px;
+    border-radius: 25px 25px 20px 20px;
+    flex-shrink: 0;
+    box-shadow: inset 0 -6px 12px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  .nail-info {
+    flex: 1;
+  }
+
+  .nail-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.1em;
+    color: var(--dark);
+    margin-bottom: 0.3rem;
+  }
+
+  .nail-name-jp {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+  }
+
+  .nail-desc {
+    font-size: 0.7rem;
+    line-height: 1.9;
+    letter-spacing: 0.06em;
+    color: var(--text);
+  }
+
+  .nail-badge {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--rose);
+    border: 0.5px solid var(--rose);
+    padding: 0.2rem 0.6rem;
+    display: inline-block;
+    margin-top: 0.5rem;
+  }
+
+  /* CTA */
+  .cta-section {
+    text-align: center;
+    padding: 2rem 0;
+    border-top: 0.5px solid var(--blush);
+    margin-top: 2rem;
+  }
+
+  .cta-text {
+    font-size: 0.72rem;
+    line-height: 2.3;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .cta-btn {
+    display: inline-block;
+    background: none;
+    border: 0.5px solid var(--deep);
+    color: var(--deep);
+    padding: 1rem 3rem;
+    font-family: 'Noto Serif JP', serif;
+    font-weight: 200;
+    font-size: 0.75rem;
+    letter-spacing: 0.25em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .cta-btn:hover {
+    background: var(--deep);
+    color: var(--cream);
+  }
+
+  .restart-btn {
+    display: block;
+    margin-top: 1.5rem;
+    background: none;
+    border: none;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-align: center;
+    width: 100%;
+    transition: color 0.2s;
+  }
+
+  .restart-btn:hover {
+    color: var(--rose);
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    border-top: 0.5px solid var(--blush);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">mynails</div>
+  <div class="logo-sub">tip de gel</div>
+</header>
+
+<main>
+  <!-- Hero -->
+  <div class="hero" id="hero">
+    <div class="hero-label">nail color diagnosis</div>
+    <h1 class="hero-title">あなたの指先に<br>似合う色を。</h1>
+    <p class="hero-desc">
+      5年間のアパレル経験から生まれた<br>
+      mynailsのカラー診断。<br>
+      4つの質問で、今の自分に<br>
+      ぴったりの色が見つかります。
+    </p>
+    <div class="divider"><span class="divider-icon">✦</span></div>
+    <button class="btn-next" onclick="startDiagnosis()" style="margin: 0 auto; display: block;">
+      診断を始める
+    </button>
+  </div>
+
+  <!-- Question area -->
+  <div class="question-area hidden" id="questions">
+    <div class="step-indicator" id="steps"></div>
+    <div class="question-label" id="q-label">question 01</div>
+    <p class="question-text" id="q-text"></p>
+    <div class="options" id="options"></div>
+    <div class="nav-area">
+      <button class="btn-back" id="btn-back" onclick="goBack()">← もどる</button>
+      <button class="btn-next" id="btn-next" onclick="goNext()" disabled>次へ</button>
+    </div>
+  </div>
+
+  <!-- Result area -->
+  <div class="result-area" id="result"></div>
+</main>
+
+<footer>
+  © mynails — 指先に、今日のジュエリーを。
+</footer>
+
+<script>
+  const questions = [
+    {
+      label: "question 01",
+      text: "あなたの肌のトーンは\nどちらに近いですか？",
+      options: [
+        { icon: "🌸", main: "明るく、ピンクや赤みがかっている", sub: "日焼けすると赤くなりやすい", value: "cool" },
+        { icon: "🌿", main: "ゴールドっぽく、黄みがかっている", sub: "日焼けすると褐色になりやすい", value: "warm" },
+        { icon: "🤍", main: "どちらともいえない、混合タイプ", sub: "季節や光によって変わる気がする", value: "neutral" },
+      ]
+    },
+    {
+      label: "question 02",
+      text: "ふだん選ぶファッションの\n雰囲気はどちら？",
+      options: [
+        { icon: "🤍", main: "シンプル・ミニマル・大人っぽい", sub: "白・グレー・ネイビーが多め", value: "classic" },
+        { icon: "🌹", main: "フェミニン・やわらかい・華やか", sub: "ピンク・ベージュ・フラワー系が多め", value: "feminine" },
+        { icon: "🌙", main: "クール・モード・こなれ感", sub: "ブラック・アース系・トレンド感を大切に", value: "cool_mode" },
+      ]
+    },
+    {
+      label: "question 03",
+      text: "ネイルに求めるのは\nどんな雰囲気？",
+      options: [
+        { icon: "💎", main: "上品で長く使えるもの", sub: "シンプルで飽きないが好き", value: "timeless" },
+        { icon: "🌸", main: "かわいくて気分が上がるもの", sub: "気分で変えたい・季節感を楽しみたい", value: "mood" },
+        { icon: "⭐", main: "個性的でちょっと特別なもの", sub: "自分らしさを出したい・目に留まる", value: "unique" },
+      ]
+    },
+    {
+      label: "question 04",
+      text: "今、自分に贈りたい言葉は\nどれに近いですか？",
+      options: [
+        { icon: "🌿", main: "「少し休んで、自分を労わりたい」", sub: "穏やかで、ほっとする何かがほしい", value: "rest" },
+        { icon: "✨", main: "「今日の自分、もっと輝かせたい」", sub: "前向きで、背中を押してほしい", value: "shine" },
+        { icon: "🌙", main: "「静かに、自分の世界に浸りたい」", sub: "内向きで、洗練された何かがほしい", value: "depth" },
+      ]
+    }
+  ];
+
+  const results = {
+    // ピンク系・春夏
+    spring_rose: {
+      type: "スプリング ロゼ",
+      typeEn: "Spring Rosé",
+      desc: "明るく透明感のある肌をお持ちのあなたには、やわらかなピンク・珊瑚・コーラルが映えます。重くなりすぎず、指先に自然な血色感と華やかさを添えるカラーが似合いタイプです。",
+      swatches: [
+        { name: "コーラルピンク", color: "#f4a0a0" },
+        { name: "ローズミルク", color: "#f2c2b5" },
+        { name: "ピーチシュガー", color: "#f5d0b5" },
+        { name: "ソフトモーブ", color: "#d4a8c0" },
+      ],
+      nails: [
+        { name: "Dusk Blossom", nameJp: "ダスクブロッサム", color: "#e8a090", desc: "夕暮れ時の桜のように、ピンクとオレンジが溶け合う儚くて美しいカラー。あなたの透明感を引き出します。", badge: "recommend" },
+      ]
+    },
+    // ベージュ・くすみ系
+    nude_ash: {
+      type: "ヌード アッシュ",
+      typeEn: "Nude Ash",
+      desc: "洗練されたニュートラルトーンが似合うタイプ。グレイッシュなベージュ・アッシュ・スモーキーカラーが指先を大人っぽく、こなれた印象に仕上げます。",
+      swatches: [
+        { name: "ミスティグレー", color: "#b8b0aa" },
+        { name: "ウォームアッシュ", color: "#c4b5a8" },
+        { name: "モカベージュ", color: "#c9aa95" },
+        { name: "スモークシルバー", color: "#c0bcbc" },
+      ],
+      nails: [
+        { name: "Misty Ash", nameJp: "ミスティーアッシュ", color: "#b8ae9e", desc: "グレーとブラウンが溶け合ったスモーキーアッシュ。シルバーゴールドとの繊細なハーモニーが、日常に洗練を添えます。", badge: "recommend" },
+      ]
+    },
+    // ヘルシー・秋冬
+    autumn_earth: {
+      type: "オータム アース",
+      typeEn: "Autumn Earth",
+      desc: "黄みと深みが映えるあなたには、テラコッタ・ブリック・マスタードなど大地感のあるカラーが似合います。指先にこっくりとした深みと、独自の存在感をもたらします。",
+      swatches: [
+        { name: "テラコッタ", color: "#c07050" },
+        { name: "ブリックレッド", color: "#b85545" },
+        { name: "マスタード", color: "#c8a040" },
+        { name: "アースブラウン", color: "#9a7058" },
+      ],
+      nails: [
+        { name: "Coming Soon", nameJp: "新色近日公開", color: "#b87060", desc: "あなたのタイプに合わせた新カラーを準備中です。プレオープンをお楽しみに。", badge: "soon" },
+      ]
+    },
+    // ウィンター・クール
+    winter_crystal: {
+      type: "ウィンター クリスタル",
+      typeEn: "Winter Crystal",
+      desc: "クリアな透明感とコントラストが映えるあなたには、ブルーベース・ローズモーブ・ディープレッドが輝きます。シャープで印象的な指先が、あなたの魅力を際立たせます。",
+      swatches: [
+        { name: "アイシーピンク", color: "#d4b8cc" },
+        { name: "ローズモーブ", color: "#c080a0" },
+        { name: "ディープバーガンディ", color: "#8a2040" },
+        { name: "ブルーグレー", color: "#8898b0" },
+      ],
+      nails: [
+        { name: "Coming Soon", nameJp: "新色近日公開", color: "#a06080", desc: "あなたのタイプに合わせた新カラーを準備中です。プレオープンをお楽しみに。", badge: "soon" },
+      ]
+    }
+  };
+
+  let current = 0;
+  let answers = [];
+
+  function startDiagnosis() {
+    document.getElementById('hero').classList.add('hidden');
+    document.getElementById('questions').classList.remove('hidden');
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    const q = questions[current];
+    document.getElementById('q-label').textContent = q.label;
+    document.getElementById('q-text').textContent = q.text;
+
+    // Steps
+    const stepsEl = document.getElementById('steps');
+    stepsEl.innerHTML = '';
+    questions.forEach((_, i) => {
+      const dot = document.createElement('div');
+      dot.className = 'step-dot' + (i < current ? ' done' : i === current ? ' active' : '');
+      stepsEl.appendChild(dot);
+    });
+
+    // Options
+    const optionsEl = document.getElementById('options');
+    optionsEl.innerHTML = '';
+    q.options.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn' + (answers[current] === opt.value ? ' selected' : '');
+      btn.innerHTML = `
+        <span class="option-icon">${opt.icon}</span>
+        <span class="option-content">
+          <span class="option-main">${opt.main}</span>
+          <span class="option-sub">${opt.sub}</span>
+        </span>
+      `;
+      btn.onclick = () => selectOption(opt.value, btn);
+      optionsEl.appendChild(btn);
+    });
+
+    document.getElementById('btn-back').style.visibility = current === 0 ? 'hidden' : 'visible';
+    document.getElementById('btn-next').disabled = !answers[current];
+    document.getElementById('btn-next').textContent = current === questions.length - 1 ? '診断結果を見る' : '次へ';
+
+    // Re-animate
+    const qArea = document.getElementById('questions');
+    qArea.style.animation = 'none';
+    qArea.offsetHeight;
+    qArea.style.animation = 'fadeUp 0.5s ease both';
+  }
+
+  function selectOption(value, btn) {
+    answers[current] = value;
+    document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('btn-next').disabled = false;
+  }
+
+  function goNext() {
+    if (current < questions.length - 1) {
+      current++;
+      renderQuestion();
+    } else {
+      showResult();
+    }
+  }
+
+  function goBack() {
+    if (current > 0) {
+      current--;
+      renderQuestion();
+    }
+  }
+
+  function getResultKey() {
+    const skin = answers[0];
+    const mood = answers[3];
+
+    if (skin === 'cool' && (mood === 'depth' || mood === 'shine')) return 'winter_crystal';
+    if (skin === 'cool') return 'spring_rose';
+    if (skin === 'warm' && mood === 'depth') return 'autumn_earth';
+    if (skin === 'warm') return 'autumn_earth';
+    if (skin === 'neutral' && answers[1] === 'cool_mode') return 'nude_ash';
+    if (mood === 'rest') return 'nude_ash';
+    if (mood === 'shine') return 'spring_rose';
+    return 'nude_ash';
+  }
+
+  function showResult() {
+    document.getElementById('questions').classList.add('hidden');
+    const key = getResultKey();
+    const r = results[key];
+
+    const swatchHTML = r.swatches.map(s => `
+      <div class="swatch">
+        <div class="swatch-circle" style="background:${s.color}"></div>
+        <span class="swatch-name">${s.name}</span>
+      </div>
+    `).join('');
+
+    const nailHTML = r.nails.map(n => `
+      <div class="nail-card">
+        <div class="nail-color-preview" style="background: linear-gradient(160deg, ${n.color}dd 0%, ${n.color}88 100%)"></div>
+        <div class="nail-info">
+          <div class="nail-name">${n.name}</div>
+          <div class="nail-name-jp">${n.nameJp}</div>
+          <div class="nail-desc">${n.desc}</div>
+          <span class="nail-badge">${n.badge === 'recommend' ? 'your color' : 'coming soon'}</span>
+        </div>
+      </div>
+    `).join('');
+
+    document.getElementById('result').innerHTML = `
+      <div class="result-header">
+        <div class="result-type-label">your result</div>
+        <div class="result-type">${r.type}</div>
+        <div class="result-type-en">${r.typeEn}</div>
+      </div>
+      <p class="result-desc">${r.desc}</p>
+      <div class="color-section">
+        <div class="color-section-title">your palette</div>
+        <div class="swatches">${swatchHTML}</div>
+      </div>
+      <div class="divider"><span class="divider-icon">✦</span></div>
+      <div class="color-section">
+        <div class="color-section-title">recommended from mynails</div>
+        ${nailHTML}
+      </div>
+      <div class="cta-section">
+        <p class="cta-text">
+          気になるカラーはみつかりましたか？<br>
+          mynailsでは、あなたにぴったりの<br>
+          オーダーメイドネイルチップをお作りします。
+        </p>
+        <a href="https://www.instagram.com/___mynails_/" class="cta-btn" target="_blank">
+          Instagram で見てみる
+        </a>
+        <button class="restart-btn" onclick="restart()">もう一度診断する</button>
+      </div>
+    `;
+
+    const resultEl = document.getElementById('result');
+    resultEl.classList.add('show');
+    resultEl.style.animation = 'none';
+    resultEl.offsetHeight;
+    resultEl.style.animation = 'fadeUp 0.8s ease both';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function restart() {
+    current = 0;
+    answers = [];
+    document.getElementById('result').classList.remove('show');
+    document.getElementById('result').innerHTML = '';
+    document.getElementById('hero').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+</body>
+</html>
